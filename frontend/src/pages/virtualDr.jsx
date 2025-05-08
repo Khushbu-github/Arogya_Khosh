@@ -2,6 +2,42 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../ui/virtualdr.css';
 import '@splinetool/viewer';
 
+// Add OpenCV.js script
+const loadOpenCV = () => {
+  if (window._opencvLoadingPromise) return window._opencvLoadingPromise;
+  window._opencvLoadingPromise = new Promise((resolve) => {
+    // Check if OpenCV is already loaded
+    if (window.cv) {
+      console.log('OpenCV already loaded');
+      resolve(window.cv);
+      return;
+    }
+
+    // Remove any existing OpenCV script
+    const existingScript = document.querySelector('script[src*="opencv.js"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    // Create new script
+    const script = document.createElement('script');
+    script.src = 'https://docs.opencv.org/4.8.0/opencv.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.cv) {
+        console.log('OpenCV loaded via script');
+        resolve(window.cv);
+      } else {
+        window.onOpenCvReady = () => {
+          console.log('OpenCV ready callback');
+          resolve(window.cv);
+        };
+      }
+    };
+    document.body.appendChild(script);
+  });
+  return window._opencvLoadingPromise;
+};
 
 const VirtualDoctor = () => {
   // State variables
@@ -15,11 +51,16 @@ const VirtualDoctor = () => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [cv, setCv] = useState(null);
+  const [faceCascade, setFaceCascade] = useState(null);
+  const [debugStatus, setDebugStatus] = useState('');
   
   const messagesContainerRef = useRef(null);
   const cameraStreamRef = useRef(null);
   const videoRef = useRef(null);
   const recognitionRef = useRef(null);
+  const canvasRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
   // Cookie functions
   const getCookie = (name) => {
@@ -324,36 +365,173 @@ const VirtualDoctor = () => {
     }
   };
 
-  // Camera functions
-  const startCamera = () => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(function(stream) {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            cameraStreamRef.current = stream;
-            setCameraActive(true);
-          }
-        })
-        .catch(function(error) {
-          console.error('Camera error:', error);
-          alert('Unable to access camera. Please check permissions.');
-        });
+  // Load OpenCV and face cascade classifier
+  useEffect(() => {
+    let mounted = true;
+    let opencvInstance = null;
+    let faceCascadeInstance = null;
+
+    const initOpenCV = async () => {
+      try {
+        console.log('Initializing OpenCV...');
+        opencvInstance = await loadOpenCV();
+        if (!mounted) return;
+        console.log('OpenCV initialized successfully');
+        setCv(opencvInstance);
+        // Load face cascade classifier
+        console.log('Loading face cascade classifier...');
+        const response = await fetch('https://raw.githubusercontent.com/opencv/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml');
+        const cascadeText = await response.text();
+        const xmlFile = 'haarcascade_frontalface_default.xml';
+        // Remove if already exists
+        try { opencvInstance.FS_unlink('/' + xmlFile); } catch (e) {}
+        opencvInstance.FS_createDataFile('/', xmlFile, cascadeText, true, false, false);
+        faceCascadeInstance = new opencvInstance.CascadeClassifier();
+        faceCascadeInstance.load(xmlFile);
+        console.log('Face cascade classifier loaded successfully');
+        console.log('Cascade empty:', faceCascadeInstance.empty());
+        if (faceCascadeInstance.empty()) {
+          console.error('Failed to load cascade classifier!');
+        }
+        if (mounted) {
+          setFaceCascade(faceCascadeInstance);
+        }
+      } catch (error) {
+        console.error('Error in OpenCV initialization:', error);
+      }
+    };
+
+    initOpenCV();
+
+    return () => {
+      mounted = false;
+      // Clean up OpenCV resources
+      if (faceCascadeInstance) {
+        faceCascadeInstance.delete();
+      }
+    };
+  }, []);
+
+  const testCascadeLoad = () => {
+    if (cv && faceCascade && typeof faceCascade.empty === 'function') {
+      setDebugStatus('Cascade loaded. empty() = ' + faceCascade.empty());
+      console.log('Cascade loaded. empty() =', faceCascade.empty());
     } else {
-      alert('Your browser does not support camera access.');
+      setDebugStatus('Cascade or OpenCV not ready.');
+      console.log('Cascade or OpenCV not ready.');
     }
   };
 
+  const detectFaceOnce = () => {
+    if (
+      videoRef.current &&
+      canvasRef.current &&
+      cameraActive &&
+      cv &&
+      faceCascade &&
+      typeof faceCascade.empty === 'function' &&
+      !faceCascade.empty()
+    ) {
+      setDebugStatus('Running face detection ONCE...');
+      console.log('Running face detection ONCE...');
+      detectFaces(videoRef.current, canvasRef.current);
+    } else {
+      setDebugStatus('Cannot run detection: dependencies not ready or cascade empty');
+      console.log('Cannot run detection: dependencies not ready or cascade empty');
+    }
+  };
+
+  // Face detection function
+  const detectFaces = (video, canvas) => {
+    if (!cv || !faceCascade || !video || !canvas) {
+      return;
+    }
+
+    try {
+      // Create matrices
+      const src = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
+      const gray = new cv.Mat();
+      const faces = new cv.RectVector();
+      
+      // Create video capture
+      const cap = new cv.VideoCapture(video);
+      
+      // Read frame
+      cap.read(src);
+      
+      // Convert to grayscale
+      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+      
+      // Detect faces
+      faceCascade.detectMultiScale(gray, faces, 1.1, 3, 0);
+      
+      console.log('Faces detected:', faces.size());
+      
+      // Draw rectangles around faces
+      for (let i = 0; i < faces.size(); ++i) {
+        const face = faces.get(i);
+        const point1 = new cv.Point(face.x, face.y);
+        const point2 = new cv.Point(face.x + face.width, face.y + face.height);
+        cv.rectangle(src, point1, point2, [0, 255, 0, 255], 2);
+      }
+      
+      // Display the result
+      cv.imshow(canvas, src);
+      
+      // Clean up
+      src.delete();
+      gray.delete();
+      faces.delete();
+    } catch (error) {
+      console.error('Error in face detection:', error);
+    }
+  };
+
+  // Modified startCamera function
+  const startCamera = async () => {
+    try {
+      console.log('Starting camera...');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: 320,
+          height: 240,
+          facingMode: 'user'
+        } 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        cameraStreamRef.current = stream;
+        setCameraActive(true);
+        console.log('Camera started successfully');
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded');
+          console.log('Video dimensions:', {
+            width: videoRef.current.videoWidth,
+            height: videoRef.current.videoHeight
+          });
+          // Do not start detection loop automatically
+        };
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      setError('Could not access camera. Please ensure you have granted camera permissions.');
+    }
+  };
+
+  // Modified stopCamera function
   const stopCamera = () => {
     if (cameraStreamRef.current) {
-      cameraStreamRef.current.getTracks().forEach(track => {
-        track.stop();
-      });
+      cameraStreamRef.current.getTracks().forEach(track => track.stop());
       cameraStreamRef.current = null;
-      setCameraActive(false);
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraActive(false);
   };
 
+  // Camera functions
   const toggleCamera = () => {
     if (cameraActive) {
       stopCamera();
@@ -495,24 +673,30 @@ const VirtualDoctor = () => {
             </div>
             
             <div className="camera-container">
-              <div className="camera-content">
-                {cameraActive ? (
-                  <video ref={videoRef} autoPlay playsInline className="camera-feed"></video>
-                ) : (
-                  <div className="camera-placeholder">
-                    <i className="fas fa-video-slash"></i>
-                    <span>Camera Off</span>
-                  </div>
-                )}
+              <div className="camera-feed">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  style={{ width: '100%', maxWidth: '320px' }}
+                />
+                <canvas
+                  ref={canvasRef}
+                  width="320"
+                  height="240"
+                  style={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    maxWidth: '320px'
+                  }}
+                />
               </div>
-              
-              <button 
-                className={`camera-toggle-btn ${cameraActive ? 'active' : ''}`} 
-                onClick={toggleCamera}
-              >
-                <i className={`fas ${cameraActive ? 'fa-video-slash' : 'fa-video'}`}></i>
-                {cameraActive ? 'Turn Off Camera' : 'Turn On Camera'}
-              </button>
+              <div className="debug-status" style={{marginTop: '10px', fontWeight: 500, color: '#0066ff'}}>{debugStatus}</div>
+              <button onClick={startCamera} className="camera-button">Start Camera</button>
+              <button onClick={testCascadeLoad} className="camera-button" style={{marginLeft: '8px'}}>Test Cascade Load</button>
+              <button onClick={detectFaceOnce} className="camera-button" style={{marginLeft: '8px'}}>Detect Face (Once)</button>
             </div>
           </div>
         </div>

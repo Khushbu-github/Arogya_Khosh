@@ -614,65 +614,65 @@ const PatientDashboard = () => {
     }
   };
 
- // Google Translate initialization
-useEffect(() => {
-  // Check if script already exists
-  if (!document.querySelector('script[src*="translate_a/element.js"]')) {
-    // Define the callback function if it doesn't exist yet
-    if (!window.googleTranslateElementInit) {
-      window.googleTranslateElementInit = function() {
-        new window.google.translate.TranslateElement(
-          {
-            pageLanguage: 'en',
-            includedLanguages: 'en,hi,fr,de,ta,gu,kn',
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
-          },
-          'google_translate_element'
-        );
-        
-        // Apply saved language preference
-        setTimeout(() => {
-          const savedLang = localStorage.getItem('preferredLanguage');
-          if (savedLang && document.querySelector('.goog-te-combo')) {
-            document.querySelector('.goog-te-combo').value = savedLang;
-            document.querySelector('.goog-te-combo').dispatchEvent(new Event('change'));
-          }
-        }, 1000);
-      };
+  // Google Translate initialization
+  useEffect(() => {
+    // Check if script already exists
+    if (!document.querySelector('script[src*="translate_a/element.js"]')) {
+      // Define the callback function if it doesn't exist yet
+      if (!window.googleTranslateElementInit) {
+        window.googleTranslateElementInit = function() {
+          new window.google.translate.TranslateElement(
+            {
+              pageLanguage: 'en',
+              includedLanguages: 'en,hi,fr,de,ta,gu,kn',
+              layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE
+            },
+            'google_translate_element'
+          );
+          
+          // Apply saved language preference
+          setTimeout(() => {
+            const savedLang = localStorage.getItem('preferredLanguage');
+            if (savedLang && document.querySelector('.goog-te-combo')) {
+              document.querySelector('.goog-te-combo').value = savedLang;
+              document.querySelector('.goog-te-combo').dispatchEvent(new Event('change'));
+            }
+          }, 1000);
+        };
+      }
+
+      // Add Google Translate script
+      const script = document.createElement('script');
+      script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      script.async = true;
+      document.body.appendChild(script);
     }
 
-    // Add Google Translate script
-    const script = document.createElement('script');
-    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    script.async = true;
-    document.body.appendChild(script);
-  }
+    // Save language preference when changed
+    const saveLangPreference = () => {
+      const handleComboChange = (comboEl) => {
+        if (comboEl) {
+          comboEl.addEventListener('change', function() {
+            const lang = this.value;
+            localStorage.setItem('preferredLanguage', lang);
+          });
+        }
+      };
 
-  // Save language preference when changed
-  const saveLangPreference = () => {
-    const handleComboChange = (comboEl) => {
+      // Initial check
+      const comboEl = document.querySelector('.goog-te-combo');
       if (comboEl) {
-        comboEl.addEventListener('change', function() {
-          const lang = this.value;
-          localStorage.setItem('preferredLanguage', lang);
-        });
+        handleComboChange(comboEl);
+      } else {
+        // If not available yet, try again after a delay
+        setTimeout(() => {
+          handleComboChange(document.querySelector('.goog-te-combo'));
+        }, 1000);
       }
     };
 
-    // Initial check
-    const comboEl = document.querySelector('.goog-te-combo');
-    if (comboEl) {
-      handleComboChange(comboEl);
-    } else {
-      // If not available yet, try again after a delay
-      setTimeout(() => {
-        handleComboChange(document.querySelector('.goog-te-combo'));
-      }, 1000);
-    }
-  };
-
-  saveLangPreference();
-}, []); // Empty dependency array so this runs only once
+    saveLangPreference();
+  }, []); // Empty dependency array so this runs only once
 
   // Document card component
   const DocumentCard = ({ doc }) => {
@@ -818,184 +818,762 @@ useEffect(() => {
       document.body.appendChild(toastContainer);
     }
     
-    // Check authentication status every 5 minutes
-    const authCheckInterval = setInterval(checkPatientAuth, 300000);
+    // Apply dark mode styling
+    document.body.classList.add('dark-mode');
     
+    // Add CSS for dark mode with gradients
+    const style = document.createElement('style');
+    style.textContent = `
+      body.dark-mode {
+        background: #121212;
+        color: #e0e0e0;
+      }
+      
+      .app-container {
+        background: linear-gradient(135deg, #0a192f 0%, #041a29 50%, #022c43 100%);
+      }
+      
+      .sidebar {
+        background: linear-gradient(180deg, #0a1a2f 0%, #041e36 100%);
+        border-right: 1px solid #1e3a5f;
+        color: #e0e0e0;
+      }
+      
+      .content-card {
+        background: rgba(13, 27, 42, 0.7);
+        border: 1px solid #1e3a5f;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+      
+      /* Updated document card styles for new alignment */
+      .documents-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem;
+      }
+      
+      .document-card {
+        background: linear-gradient(145deg, #0d253f 0%, #0f3a5f 100%);
+        border: 1px solid #1e4a7f;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        color: #e0e0e0;
+        transition: all 0.3s ease;
+        padding: 1.25rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+      
+      .document-card:hover {
+        box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+        border-color: #14b8a6;
+        transform: translateY(-3px);
+      }
+      
+      .document-icon {
+        font-size: 2rem;
+        color: #14b8a6;
+        margin-bottom: 0.75rem;
+        text-align: center;
+      }
+      
+      .document-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-align: center;
+        word-break: break-word;
+      }
+      
+      .document-date {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-bottom: 0.75rem;
+        text-align: center;
+      }
+      
+      .document-visibility {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-bottom: 1rem;
+      }
+      
+      .document-access-control {
+        margin-top: auto;
+        text-align: center;
+      }
+      
+      .doc-btn {
+        width: 100%;
+        padding: 0.6rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: none;
+        color: white;
+        font-size: 0.9rem;
+      }
+      
+      .doc-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .doc-btn.view-btn {
+        background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%);
+        border: none;
+      }
+      
+      .doc-btn.request-btn {
+        background: linear-gradient(135deg, #0e7490 0%, #0284c7 100%);
+        border: none;
+      }
+      
+      .doc-btn.error-btn {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        border: none;
+      }
+      
+      .loading {
+        text-align: center;
+        color: #94a3b8;
+        font-style: italic;
+        padding: 0.5rem;
+      }
+      
+      /* Updated document menu styles */
+      .document-menu {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 10;
+      }
+      
+      .menu-trigger {
+        cursor: pointer;
+        padding: 0.5rem;
+        color: #94a3b8;
+        transition: color 0.3s ease;
+      }
+      
+      .menu-trigger:hover {
+        color: #14b8a6;
+      }
+      
+      .document-menu-options {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: #0d1b2a;
+        border: 1px solid #1e3a5f;
+        border-radius: 6px;
+        width: 150px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 20;
+      }
+      
+      .document-menu:hover .document-menu-options {
+        display: block;
+      }
+      
+      .menu-option {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .menu-option:hover {
+        background: #1e3a5f;
+      }
+      
+      .menu-option.edit-option {
+        color: #14b8a6;
+      }
+      
+      .menu-option.delete-option {
+        color: #ef4444;
+        border-top: 1px solid #1e3a5f;
+      }
+      
+      /* Section headers */
+      .document-section-header {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 1.5rem 0 1rem;
+        color: #e0e0e0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #1e3a5f;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      
+      /* Document counter badge */
+      .document-counter {
+        background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      
+      /* Header styling */
+      .header {
+        background: rgba(13, 27, 42, 0.9);
+        border-bottom: 1px solid #1e3a5f;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      
+      .header-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #e0e0e0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+      
+      /* Search input styling */
+      .search-container {
+        position: relative;
+        width: 300px;
+      }
+      
+      .search-input {
+        background: rgba(13, 27, 42, 0.8);
+        border: 1px solid #1e3a5f;
+        border-radius: 8px;
+        color: #e0e0e0;
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+        width: 100%;
+        transition: all 0.3s ease;
+      }
+      
+      .search-input:focus {
+        border-color: #14b8a6;
+        box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2);
+        outline: none;
+      }
+      
+      .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: #94a3b8;
+      }
+      
+      /* Modal styling */
+      .modal {
+        background-color: rgba(0, 0, 0, 0.7);
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      
+      .modal-content {
+        background: #0d1b2a;
+        border: 1px solid #1e3a5f;
+        border-radius: 10px;
+        padding: 2rem;
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      }
+      
+      .close-modal {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #94a3b8;
+        transition: color 0.3s ease;
+      }
+      
+      .close-modal:hover {
+        color: #ef4444;
+      }
+      
+      .modal h2 {
+        color: #e0e0e0;
+        margin-bottom: 1rem;
+      }
+      
+      .verification-input {
+        background: #0d2b45;
+        border: 1px solid #1e4a7f;
+        border-radius: 6px;
+        color: #e0e0e0;
+        padding: 0.75rem;
+        width: 100%;
+        margin: 1rem 0;
+      }
+      
+      .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      
+      .btn {
+        padding: 0.6rem 1.25rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+      }
+      
+      .btn-secondary {
+        background: #1e293b;
+        color: #e0e0e0;
+      }
+      
+      .btn-secondary:hover {
+        background: #334155;
+      }
+      
+      .btn-danger {
+        background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+        color: white;
+      }
+      
+      .btn-danger:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+      }
+      
+      /* Toast notification styling */
+      .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        z-index: 1000;
+      }
+      
+      .toast {
+        display: flex;
+        background: #0d1b2a;
+        border-left: 4px solid;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        max-width: 350px;
+        opacity: 0;
+        transform: translateX(50px);
+        transition: all 0.4s ease;
+      }
+      
+      .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      
+      .toast.success {
+        border-left-color: #14b8a6;
+      }
+      
+      .toast.error {
+        border-left-color: #ef4444;
+      }
+      
+      .toast.info {
+        border-left-color: #0ea5e9;
+      }
+      
+      .toast.warning {
+        border-left-color: #f59e0b;
+      }
+      
+      .toast-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        background: rgba(255, 255, 255, 0.05);
+        font-size: 1.25rem;
+        font-weight: bold;
+      }
+      
+      .toast.success .toast-icon {
+        color: #14b8a6;
+      }
+      
+      .toast.error .toast-icon {
+        color: #ef4444;
+      }
+      
+      .toast.info .toast-icon {
+        color: #0ea5e9;
+      }
+      
+      .toast.warning .toast-icon {
+        color: #f59e0b;
+      }
+      
+      .toast-content {
+        flex: 1;
+        padding: 1rem;
+        position: relative;
+      }
+      
+      .toast-message {
+        color: #e0e0e0;
+        padding-right: 1.5rem;
+      }
+      
+      .toast-close {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+      
+      .toast-close:hover {
+        color: #e0e0e0;
+      }
+      
+      .toast-progress {
+        height: 4px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .toast-progress-bar {
+        height: 100%;
+        width: 100%;
+        transform-origin: left;
+        animation: progress-animation linear forwards;
+      }
+      
+      .toast.success .toast-progress-bar {
+        background: #14b8a6;
+      }
+      
+      .toast.error .toast-progress-bar {
+        background: #ef4444;
+      }
+      
+      .toast.info .toast-progress-bar {
+        background: #0ea5e9;
+      }
+      
+      .toast.warning .toast-progress-bar {
+        background: #f59e0b;
+      }
+      
+      @keyframes progress-animation {
+        from {
+          transform: scaleX(1);
+        }
+        to {
+          transform: scaleX(0);
+        }
+      }
+      
+      /* Add document button */
+      .add-doc-btn {
+        background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+        border: none;
+        color: white;
+        padding: 0.6rem 1.25rem;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .add-doc-btn:hover {
+        background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      /* Action buttons */
+      .action-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.6rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      
+      .action-button:hover {
+        background: rgba(20, 184, 166, 0.2);
+        color: #14b8a6;
+      }
+      
+      .action-button.active {
+        background: rgba(20, 184, 166, 0.2);
+        color: #14b8a6;
+      }
+      
+      /* Responsive layout */
+      @media (max-width: 768px) {
+        .documents-container {
+          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+        
+        .search-container {
+          width: 200px;
+        }
+        
+        .header {
+          padding: 0.75rem 1rem;
+        }
+        
+        .header-title {
+          font-size: 1.25rem;
+        }
+        
+        .document-section-header {
+          font-size: 1.25rem;
+        }
+      }
+      
+      @media (max-width: 576px) {
+        .documents-container {
+          grid-template-columns: 1fr;
+        }
+        
+        .search-container {
+          width: 100%;
+        }
+        
+        .header {
+          flex-direction: column;
+          gap: 0.75rem;
+          align-items: stretch;
+        }
+        
+        .header-controls {
+          flex-wrap: wrap;
+        }
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Clean up on unmount
     return () => {
-      clearInterval(authCheckInterval);
+      // Remove toast container
+      const toastContainer = document.getElementById('toast-container');
+      if (toastContainer) {
+        toastContainer.remove();
+      }
+      
+      // Remove modal if it exists
+      const modal = document.getElementById('delete-verification-modal');
+      if (modal) {
+        modal.remove();
+      }
+      
+      // Remove dark mode class
+      document.body.classList.remove('dark-mode');
+      
+      // Remove added style tag
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
     };
   }, [id]);
 
-  // Navigation links
-  const handleNavigation = (path) => {
-    navigate(path);
-  };
-
-  const handleLogout = () => {
-    // Clear auth token cookie
-    document.cookie = "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    
-    // Redirect to login page
-    navigate('/route/login/');
-  };
-
+  // Render main dashboard
   return (
-    <div className={`app-container ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+    <div className="app-container">
       {/* Sidebar */}
       <div className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <div className="logo">AROGYAKOSH</div>
-        </div>
-        
-        <div className="sidebar-menu">
-          <div className="menu-item active" onClick={() => handleNavigation(`/route/patient/${id}`)}>
-            <i className="fas fa-file-medical"></i>
-            <span>Patient Dashboard</span>
-          </div>
-          <div className="menu-item" onClick={() => handleNavigation('/route/chat')}>
-            <i className="fas fa-user-md"></i>
-            <span>Virtual Doctor</span>
-          </div>
-          <div className="menu-item" onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-          </div>
-        </div>
-        
-        <div className="sidebar-footer">
-          <div id="google_translate_element"></div>
-          <button id="readAloudBtn" className="read-aloud-btn" onClick={toggleReadAloud}>
-            <i className="fas fa-volume-up"></i>
-            {speaking ? ' Pause Reading' : ' Read Aloud'}
+          <h2>Patient Portal</h2>
+          <button className="close-sidebar" onClick={toggleSidebar}>
+            <i className="fas fa-times"></i>
           </button>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="main-content" id="main-content">
-        <div className="header">
-          {!isSidebarOpen && (
-            <button className="sidebar-toggle-mobile" onClick={toggleSidebar}>
-              <i className="fas fa-bars"></i>
-            </button>
-          )}
-          <h1 className="page-title">Patient Documents</h1>
-        </div>
-        
-        <div className="content-card">
-          <h2 className="card-title">Patient Information</h2>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ marginRight: '20px', marginBottom: '10px' }}>
-              <h3 style={{ margin: 0, fontSize: '18px' }}>
-                <span id="patient-name">{patientDetails.name || ''}</span>
-              </h3>
-              <p style={{ margin: '5px 0', color: '#777' }}>
-                <span id="patient-age">{patientDetails.age || ''}</span>
-              </p>
-              <p style={{ margin: '5px 0' }}>
-                <span id="patient-blood-group">{patientDetails.bloodGroup || ''}</span>
-              </p>
-              <p style={{ margin: '5px 0' }}>
-                Contact: <span id="patient-contact">{patientDetails.contact || ''}</span>
-              </p>
-              <p style={{ margin: '5px 0' }}>
-              Emergency Contact: <span id="patient-emergency-contact">
-                  {patientDetails.emergencyContact || ''}
-                </span>
-              </p>
-              <p style={{ margin: '5px 0' }}>
-                Address: <span id="patient-address">{patientDetails.address || ''}</span>
-              </p>
-            </div>
-            <div className="qr-code-section">
-              <div className="qr-code-title">PATIENT QR CODE</div>
-              <img 
-                id="patient-qr-code" 
-                className="qr-code" 
-                alt="Patient QR Code" 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=patient:${id}`}
-              />
-            </div>
+        <div id="google_translate_element"></div>
+        <div className="menu">
+          <div className="menu-item active">
+            <i className="fas fa-file-medical"></i>
+            <span>Documents</span>
+          </div>
+          <div className="menu-item">
+            <i className="fas fa-calendar-alt"></i>
+            <span>Appointments</span>
+          </div>
+          <div className="menu-item">
+            <i className="fas fa-notes-medical"></i>
+            <span>Medical Records</span>
+          </div>
+          <div className="menu-item">
+            <i className="fas fa-prescription"></i>
+            <span>Prescriptions</span>
+          </div>
+          <div className="menu-item">
+            <i className="fas fa-chart-line"></i>
+            <span>Health Trends</span>
+          </div>
+          <div className="menu-item">
+            <i className="fas fa-user-md"></i>
+            <span>Healthcare Team</span>
+          </div>
+          <div className="menu-item">
+            <i className="fas fa-cog"></i>
+            <span>Settings</span>
           </div>
         </div>
-        
-        <div className="content-card">
-          <div className="search-upload-container">
+      </div>
+      
+      {/* Main content */}
+      <div className="main-content">
+        {/* Header */}
+        <div className="header">
+          <div className="header-title">
+            <button className="toggle-sidebar" onClick={toggleSidebar}>
+              <i className={`fas ${isSidebarOpen ? 'fa-chevron-left' : 'fa-bars'}`}></i>
+            </button>
+            <span>
+              {patientDetails.name ? `${patientDetails.name}'s Documents` : 'Patient Documents'}
+            </span>
+          </div>
+          <div className="header-controls">
             <div className="search-container">
               <i className="fas fa-search search-icon"></i>
               <input 
                 type="text" 
                 className="search-input" 
                 placeholder="Search documents..." 
-                id="document-search"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
               />
             </div>
-            <div id="auth-section" className="auth-section">
-              {authLoading ? (
-                <div className="loading">Checking authorization...</div>
-              ) : isUserAuthorized ? (
-                <button className="add-doc-btn" onClick={addDocument}>
-                  <i className="fas fa-plus"></i> Add Document
-                </button>
-              ) : (
-                <>
-                  <div className="error">You need to log in to access this patient's dashboard</div>
-                  <button className="login-btn" onClick={redirectToLogin}>
-                    Login
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          
-          <h2 className="card-title">Patient Documents</h2>
-          
-          <h3>Personal Documents</h3>
-          <div className="slider-container">
-            <button className="slider-btn prev-btn" onClick={() => document.getElementById('personal-slider').scrollBy({ left: -300, behavior: 'smooth' })}>
-              <i className="fas fa-chevron-left"></i>
+            <button 
+              className="action-button"
+              onClick={toggleReadAloud}
+              title={speaking ? "Stop reading aloud" : "Read page aloud"}
+            >
+              <i className={`fas ${speaking ? 'fa-volume-mute' : 'fa-volume-up'}`}></i>
             </button>
-            <div className="slider" id="personal-slider">
-              {filterDocuments(personalDocuments).length > 0 ? (
-                filterDocuments(personalDocuments).map((doc) => (
-                  <DocumentCard key={doc.id} doc={doc} />
-                ))
-              ) : (
-                <p className="empty-message">No personal documents found.</p>
-              )}
-            </div>
-            <button className="slider-btn next-btn" onClick={() => document.getElementById('personal-slider').scrollBy({ left: 300, behavior: 'smooth' })}>
-              <i className="fas fa-chevron-right"></i>
-            </button>
-          </div>
-          
-          <h3>Hospital Documents</h3>
-          <div className="slider-container">
-            <button className="slider-btn prev-btn" onClick={() => document.getElementById('hospital-slider').scrollBy({ left: -300, behavior: 'smooth' })}>
-              <i className="fas fa-chevron-left"></i>
-            </button>
-            <div className="slider" id="hospital-slider">
-              {filterDocuments(hospitalDocuments).length > 0 ? (
-                filterDocuments(hospitalDocuments).map((doc) => (
-                  <DocumentCard key={doc.id} doc={doc} />
-                ))
-              ) : (
-                <p className="empty-message">No hospital documents found.</p>
-              )}
-            </div>
-            <button className="slider-btn next-btn" onClick={() => document.getElementById('hospital-slider').scrollBy({ left: 300, behavior: 'smooth' })}>
-              <i className="fas fa-chevron-right"></i>
+            <button 
+              className="add-doc-btn" 
+              onClick={addDocument}
+              disabled={!isUserAuthorized}
+            >
+              <i className="fas fa-plus"></i> Add Document
             </button>
           </div>
         </div>
         
-        <div id="toast-container" className="toast-container"></div>
+        {/* Content cards */}
+        <div className="content-card">
+          {authLoading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Verifying access...</p>
+            </div>
+          ) : isUserAuthorized ? (
+            <>
+              {/* Personal documents section */}
+              <div className="document-section">
+                <div className="document-section-header">
+                  <span>Personal Documents</span>
+                  <span className="document-counter">{personalDocuments.length}</span>
+                </div>
+                <div className="documents-container">
+                  {filterDocuments(personalDocuments).length > 0 ? (
+                    filterDocuments(personalDocuments).map(doc => (
+                      <DocumentCard key={`personal-${doc.id}`} doc={doc} />
+                    ))
+                  ) : (
+                    <div className="no-documents-message">
+                      <i className="fas fa-folder-open"></i>
+                      <p>No personal documents found</p>
+                      {searchTerm && <p>Try adjusting your search criteria</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Hospital documents section */}
+              <div className="document-section">
+                <div className="document-section-header">
+                  <span>Hospital Documents</span>
+                  <span className="document-counter">{hospitalDocuments.length}</span>
+                </div>
+                <div className="documents-container">
+                  {filterDocuments(hospitalDocuments).length > 0 ? (
+                    filterDocuments(hospitalDocuments).map(doc => (
+                      <DocumentCard key={`hospital-${doc.id}`} doc={doc} />
+                    ))
+                  ) : (
+                    <div className="no-documents-message">
+                      <i className="fas fa-hospital"></i>
+                      <p>No hospital documents found</p>
+                      {searchTerm && <p>Try adjusting your search criteria</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="unauthorized-message">
+              <i className="fas fa-exclamation-triangle"></i>
+              <h2>Access Denied</h2>
+              <p>You do not have permission to view this patient's documents.</p>
+              <button className="login-redirect-btn" onClick={redirectToLogin}>
+                Log In Again
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  )
+  );
 };
-
 
 export default PatientDashboard;

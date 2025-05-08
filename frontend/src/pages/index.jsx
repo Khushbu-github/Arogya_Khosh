@@ -42,12 +42,12 @@ const Arogyakosh = () => {
       <section className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">
-            <span className="gradient-text">Arogyakosh:</span>
-            <span className="hero-subtitle gradient-text">Transforming Healthcare</span>
+            <span className="gradient-text">Arogyakosh</span>
+            <span className="hero-subtitle gradient-text">Your Health, Our Priority</span>
           </h1>
-          <p className="hero-description">Connecting Patients, Doctors, and Hospitals with Cutting-Edge Technology</p>
+          <p className="hero-description">Experience seamless healthcare management with our cutting-edge platform</p>
           <button onClick={handleLogin} className="login-button">
-            <span>Login</span>
+            <span>Get Started</span>
             <i className="fas fa-arrow-right"></i>
           </button>
         </div>
@@ -66,58 +66,9 @@ const Arogyakosh = () => {
         </div>
       </section>
 
-      {/* Tech Stack Section */}
-      <section className="tech-section">
-        <h2 className="section-title gradient-text">Our Technology Stack</h2>
-        <div className="tech-grid">
-          <div className="tech-card">
-            <div className="tech-icon">
-              <i className="fas fa-brain"></i>
-            </div>
-            <h3>Healthcare AI</h3>
-            <p>Advanced AI solutions for medical diagnostics and treatment planning</p>
-          </div>
-          <div className="tech-card">
-            <div className="tech-icon">
-              <i className="fas fa-chart-line"></i>
-            </div>
-            <h3>Machine Learning</h3>
-            <p>Predictive models for personalized patient care</p>
-          </div>
-          <div className="tech-card">
-            <div className="tech-icon">
-              <i className="fas fa-cloud"></i>
-            </div>
-            <h3>Cloud Computing</h3>
-            <p>Secure and scalable healthcare infrastructure</p>
-          </div>
-          <div className="tech-card">
-            <div className="tech-icon">
-              <i className="fas fa-shield-alt"></i>
-            </div>
-            <h3>Cybersecurity</h3>
-            <p>Robust protection of patient data and medical records</p>
-          </div>
-          <div className="tech-card">
-            <div className="tech-icon">
-              <i className="fas fa-link"></i>
-            </div>
-            <h3>Blockchain</h3>
-            <p>Transparent and secure medical record management</p>
-          </div>
-          <div className="tech-card">
-            <div className="tech-icon">
-              <i className="fas fa-atom"></i>
-            </div>
-            <h3>Quantum Computing</h3>
-            <p>Advanced computational power for complex medical research</p>
-          </div>
-        </div>
-      </section>
-
       {/* Features Section */}
       <section className="features-section">
-        <h2 className="section-title gradient-text">Healthcare Solutions</h2>
+        <h2 className="section-title gradient-text">Our Services</h2>
         <div className="features-container">
           <div className="feature-item">
             <div className="feature-icon">
@@ -150,12 +101,49 @@ const Arogyakosh = () => {
         </div>
       </section>
 
+      {/* Tech Stack Section */}
+      <section className="tech-section">
+        <h2 className="section-title gradient-text">Our Technology</h2>
+        <div className="tech-grid">
+          <div className="tech-card">
+            <div className="tech-icon">
+              <i className="fas fa-brain"></i>
+            </div>
+            <h3>Healthcare AI</h3>
+            <p>Advanced AI solutions for medical diagnostics</p>
+          </div>
+          <div className="tech-card">
+            <div className="tech-icon">
+              <i className="fas fa-chart-line"></i>
+            </div>
+            <h3>Machine Learning</h3>
+            <p>Predictive models for personalized care</p>
+          </div>
+          <div className="tech-card">
+            <div className="tech-icon">
+              <i className="fas fa-cloud"></i>
+            </div>
+            <h3>Cloud Computing</h3>
+            <p>Secure and scalable infrastructure</p>
+          </div>
+          <div className="tech-card">
+            <div className="tech-icon">
+              <i className="fas fa-shield-alt"></i>
+            </div>
+            <h3>Cybersecurity</h3>
+            <p>Robust data protection</p>
+          </div>
+        </div>
+      </section>
+
       {/* About Section */}
       <section className="about-section">
         <div className="about-content">
           <h2 className="section-title gradient-text">About Arogyakosh</h2>
           <p className="about-description">
-            AROGYAKOSH provides comprehensive medical care with compassion and expertise. Our mission is to deliver high-quality healthcare tailored to individual patient needs. We believe in accessible healthcare for all and strive to innovate in providing medical services.
+            Arogyakosh is your comprehensive healthcare companion, providing seamless access to medical services, 
+            secure document management, and expert consultations. Our mission is to make healthcare accessible, 
+            efficient, and personalized for everyone.
           </p>
           
           <div className="stats-grid">
@@ -185,26 +173,23 @@ const Arogyakosh = () => {
           <nav className="footer-nav">
             <a href="#about">About Us</a>
             <a href="#services">Services</a>
-            <a href="#awards">Awards</a>
-            <a href="#help">Help</a>
             <a href="#contact">Contact</a>
+            <a href="#privacy">Privacy</a>
+            <a href="#terms">Terms</a>
           </nav>
           
           <div className="footer-mission">
             <p>
-              AROGYAKOSH provides comprehensive medical care with compassion and expertise.
+              Arogyakosh provides comprehensive medical care with compassion and expertise.
               Our mission is to deliver high-quality healthcare tailored to individual patient needs.
-              We believe in accessible healthcare for all and strive to innovate in providing medical services.
             </p>
           </div>
           
           <div className="social-links">
             <a href="#"><i className="fab fa-facebook-f"></i></a>
             <a href="#"><i className="fab fa-twitter"></i></a>
-            <a href="#"><i className="fab fa-google"></i></a>
-            <a href="#"><i className="fab fa-instagram"></i></a>
             <a href="#"><i className="fab fa-linkedin-in"></i></a>
-            <a href="#"><i className="fab fa-github"></i></a>
+            <a href="#"><i className="fab fa-instagram"></i></a>
           </div>
           
           <div className="contact-details">
